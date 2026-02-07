@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, ChevronDown, ChevronUp, BookOpen, Linkedin, Github } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, Linkedin, Github } from 'lucide-react';
 import { runMonteCarlo, formatDataForChart } from './simulationLogic';
 import { Dashboard } from './components/Dashboard';
 import { Controls } from './components/Controls';

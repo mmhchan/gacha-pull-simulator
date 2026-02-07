@@ -1,7 +1,6 @@
 import type { SimParams } from '../types';
 import { GAME_PRESETS } from '../presets';
-import { Play, Settings2, BarChart3, ShieldCheck, Info, Linkedin, Github } from 'lucide-react';
-import React from 'react';
+import { Play, Settings2, BarChart3, ShieldCheck, Info } from 'lucide-react';
 import Tooltip from './Tooltip';
 
 interface ControlsProps {
