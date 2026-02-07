@@ -115,15 +115,29 @@ function App() {
                     Values must follow this sequence for a valid simulation:
                   </p>
                   <div className="mt-2 font-mono font-bold text-xs bg-white p-2 rounded border border-[#dce3de] text-[#1a2a1e]">
-                    Soft &lt; Hard ≤ Guarantee
+                    Soft &lt; Hard ≤ Featured Guarantee
                   </div>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black text-[#8a9a8d] uppercase tracking-tighter">Definitions</h4>
-                  <p className="text-xs text-[#6a7a6d] leading-relaxed">
-                    Soft Pity starts the escalation. Hard Pity is the generic 6★ cap. 
-                    <span className="text-[#4a5d4e] font-medium"> The Featured Guarantee is the absolute worst-case fallback for the specific unit.</span>
+                  <div className="text-xs text-[#6a7a6d] space-y-2 leading-relaxed">
+                  <p>
+                    <span className="font-bold text-[#4a5d4e]">Soft Pity: </span> 
+                    The pull count where the 6★ rate begins to increase.
                   </p>
+                  <p>
+                    <span className="font-bold text-[#4a5d4e]">Hard Pity: </span> 
+                    The pull count that guarantees a 6★ character.
+                  </p>
+                  <p>
+                    <span className="font-bold text-[#4a5d4e] not-italic">Featured Guarantee: </span> 
+                    The absolute worst-case fallback that guarantees the featured unit.
+                  </p>
+                  <p>
+                    <span className="font-bold text-[#4a5d4e]">50/50 Rule: </span> 
+                    If enabled, 50% chance that the Hard Pity does not give the featured character.
+                  </p>
+                </div>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black text-[#8a9a8d] uppercase tracking-tighter">Visual Cues</h4>
@@ -149,7 +163,7 @@ function App() {
                   <StatCard label="Average Pulls" value={stats.avg} tooltip="Mean pulls across all iterations." />
                   <StatCard label="Luckiest" value={stats.min} color="text-emerald-600" tooltip="Best result in this batch." />
                   <StatCard label="Worst Case" value={stats.max} color="text-orange-700" tooltip="Maximum pulls recorded." />
-                  <StatCard label="Cap Hit Rate" value={`${stats.guaranteeRate}%`} color="text-amber-600" tooltip="Runs hitting the guarantee." />
+                  <StatCard label="Guarantee Rate" value={`${stats.guaranteeRate}%`} color="text-amber-600" tooltip="Runs hitting the guarantee." />
                   <StatCard label="Market Value" value={`$${stats.avgCost}`} subValue={`Max: $${stats.maxCost}`} tooltip="Calculated USD cost based on pull volume." />
                 </div>
 
