@@ -59,23 +59,38 @@ export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }:
                 type="number"
                 domain={[0, 'dataMax']}
                 ticks={generateTicks()}
-              />
+                height={50}
+              >
+                <Label
+                  value="Number of Pulls"
+                  position="insideBottom"
+                  offset={0}
+                  fill="#8a9a8d"
+                  fontSize={11}
+                  fontWeight="bold"
+                />
+              </XAxis>
+
               <YAxis
                 fontSize={11}
                 tick={{ fill: '#8a9a8d' }}
                 axisLine={false}
-                tickFormatter={(val) => view === 'CDF' ? `${val}%` : val}
-              />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#fff', border: '1px solid #dce3de', fontSize: '12px' }}
-                labelFormatter={(label) => `Successful Pull: ${label}`}
-                formatter={(value: any) => {
-                  if (value === undefined || value === null) return [0, ""];
-                  const formattedValue = view === 'CDF' ? `${Number(value).toFixed(1)}%` : value;
-                  const labelText = view === 'PDF' ? 'Frequency' : 'Probability';
-                  return [formattedValue, labelText];
-                }}
-              />
+                tickFormatter={(val) => (view === 'CDF' ? `${val}%` : val)}
+                width={60}
+              >
+                <Label
+                  value={view === 'PDF' ? "Number of Samples" : "Success Probability"}
+                  position="top"
+                  offset={15}
+                  style={{ 
+                    textAnchor: 'start', 
+                    fill: '#8a9a8d', 
+                    fontSize: '10px', 
+                    fontWeight: 'bold',
+                    letterSpacing: '0.05em' 
+                  }}
+                />
+              </YAxis>
 
               {/* Savings Marker */}
               <ReferenceLine
