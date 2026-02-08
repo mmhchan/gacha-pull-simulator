@@ -13,9 +13,6 @@ export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }:
   // Find the hard pity cap based on the simulation results
   const maxPull = activeData.length > 0 ? activeData[activeData.length - 1].pullCount : 0;
 
-  // Keep the reference line within chart boundaries
-  const cappedSavingsPos = Math.min(userSavings, maxPull);
-
   // Dynamic grid ticks based on data scale
   const generateTicks = () => {
     if (activeData.length === 0) return [];
