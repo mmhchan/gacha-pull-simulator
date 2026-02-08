@@ -168,7 +168,7 @@ function App() {
                 </div>
 
                 <div className="w-full">
-                  <Dashboard pdfData={chartData} cdfData={cumulativeData} userSavings={userSavings} />
+                  <Dashboard pdfData={chartData} cdfData={cumulativeData} userSavings={userSavings} softPity={params.softPityStart} hardPity={params.hardPity} />
                 </div>
 
                 <SavingsConfidence results={rawResults} savings={userSavings} setSavings={setUserSavings} />

@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
 
-export const Dashboard = ({ pdfData, cdfData, userSavings }: { pdfData: any[], cdfData: any[], userSavings: number }) => {
+export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }: { pdfData: any[], cdfData: any[], userSavings: number, softPity: number, hardPity: number }) => {
   const [view, setView] = useState<'PDF' | 'CDF'>('PDF');
   const activeData = view === 'PDF' ? pdfData : cdfData;
   const dataKey = view === 'PDF' ? 'count' : 'probability';
+  const maxChartPull = pdfData[pdfData.length - 1]?.pullCount || 180;
+  const clampedMarkerPos = Math.min(userSavings, maxChartPull);
+  const savingsDataPoint = cdfData.find(d => d.pullCount === Math.floor(clampedMarkerPos));
+  const currentProbability = savingsDataPoint ? savingsDataPoint.probability.toFixed(1) : "0.0";
 
   // Find the hard pity cap based on the simulation results
   const maxPull = activeData.length > 0 ? activeData[activeData.length - 1].pullCount : 0;
@@ -34,11 +38,10 @@ export const Dashboard = ({ pdfData, cdfData, userSavings }: { pdfData: any[], c
             <button
               key={type}
               onClick={() => setView(type as any)}
-              className={`px-4 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${
-                view === type 
-                ? 'border-[#4a5d4e] text-[#4a5d4e]' 
-                : 'border-transparent text-[#8a9a8d] hover:text-[#4a5d4e]'
-              }`}
+              className={`px-4 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${view === type
+                  ? 'border-[#4a5d4e] text-[#4a5d4e]'
+                  : 'border-transparent text-[#8a9a8d] hover:text-[#4a5d4e]'
+                }`}
             >
               {type === 'PDF' ? 'Probability Density' : 'Cumulative Success'}
             </button>
@@ -49,54 +52,130 @@ export const Dashboard = ({ pdfData, cdfData, userSavings }: { pdfData: any[], c
       <div className="p-6">
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activeData}>
+            <AreaChart data={activeData} margin={{ top: 30, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f4f1" />
-              <XAxis 
-                dataKey="pullCount" 
-                fontSize={11} 
-                tick={{fill: '#8a9a8d'}} 
-                axisLine={{stroke: '#dce3de'}} 
-                type="number" 
-                domain={[0, 'dataMax']} 
+              <XAxis
+                dataKey="pullCount"
+                fontSize={11}
+                tick={{ fill: '#8a9a8d' }}
+                axisLine={{ stroke: '#dce3de' }}
+                type="number"
+                domain={[0, 'dataMax']}
                 ticks={generateTicks()}
               />
-              <YAxis 
-                fontSize={11} 
-                tick={{fill: '#8a9a8d'}} 
-                axisLine={false} 
+              <YAxis
+                fontSize={11}
+                tick={{ fill: '#8a9a8d' }}
+                axisLine={false}
                 tickFormatter={(val) => view === 'CDF' ? `${val}%` : val}
               />
-              <Tooltip 
-              contentStyle={{ backgroundColor: '#fff', border: '1px solid #dce3de', fontSize: '12px' }}
-              labelFormatter={(label) => `Successful Pull: ${label}`}
-              formatter={(value: any) => {
-                if (value === undefined || value === null) return [0, ""];
-                const formattedValue = view === 'CDF' ? `${Number(value).toFixed(1)}%` : value;
-                const labelText = view === 'PDF' ? 'Frequency' : 'Probability';
-                return [formattedValue, labelText];
-              }}
-            />
-              
-              {/* Savings Marker: Green if user is already at 100% success */}
-              <ReferenceLine 
-                x={cappedSavingsPos} 
-                stroke={userSavings >= maxPull ? '#059669' : '#1a2a1e'} 
-                strokeDasharray="3 3" 
-                label={{ 
-                  value: userSavings >= maxPull ? '100% GUARANTEED' : 'YOUR SAVINGS', 
-                  position: 'top', 
-                  fill: userSavings >= maxPull ? '#059669' : '#4a5d4e', 
-                  fontSize: 10, 
-                  fontWeight: 'bold' 
-                }} 
+              <Tooltip
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #dce3de', fontSize: '12px' }}
+                labelFormatter={(label) => `Successful Pull: ${label}`}
+                formatter={(value: any) => {
+                  if (value === undefined || value === null) return [0, ""];
+                  const formattedValue = view === 'CDF' ? `${Number(value).toFixed(1)}%` : value;
+                  const labelText = view === 'PDF' ? 'Frequency' : 'Probability';
+                  return [formattedValue, labelText];
+                }}
               />
 
-              <Area 
-                type="linear" 
-                dataKey={dataKey} 
-                stroke="#4a5d4e" 
-                fill="#4a5d4e" 
-                fillOpacity={0.1} 
+              {/* Savings Marker */}
+              <ReferenceLine
+                x={clampedMarkerPos}
+                stroke={userSavings >= maxChartPull ? '#059669' : '#1a2a1e'}
+                strokeDasharray="3 3"
+                strokeOpacity={userSavings >= maxChartPull ? 0.3 : 0.5}
+              >
+                {/* Only show labels if the user is below the 100% guarantee threshold */}
+                {userSavings < maxChartPull && (
+                  <>
+                    <Label
+                      value={`SUCCESS = ${currentProbability}%`}
+                      position="top"
+                      offset={20}
+                      fill="#1a2a1e"
+                      fontSize={10}
+                      fontWeight="600"
+                      fillOpacity={0.9}
+                      /* Keep the truncation fix logic here */
+                      textAnchor={clampedMarkerPos < 40 ? "start" : "middle"}
+                      dx={clampedMarkerPos < 40 ? 5 : 0}
+                    />
+
+                    <Label
+                      value="▼"
+                      position="top"
+                      offset={5}
+                      fill="#1a2a1e"
+                      fillOpacity={0.7}
+                      fontSize={12}
+                      textAnchor="middle"
+                    />
+                  </>
+                )}
+              </ReferenceLine>
+
+              {/* Soft Pity Marker */}
+              <ReferenceLine
+                x={softPity}
+                stroke="#4a5d4e"
+                strokeDasharray="3 3"
+                strokeOpacity={0.3}
+                strokeWidth={1}
+              >
+                <Label
+                  value="SOFT PITY"
+                  position="top"
+                  fill="#4a5d4e"
+                  fillOpacity={0.8}
+                  fontSize={10}
+                  fontWeight="bold"
+                  offset={20}
+                />
+                <Label
+                  value="▼"
+                  position="top"
+                  fill="#4a5d4e"
+                  fillOpacity={0.6}
+                  fontSize={12}
+                  offset={5}
+                />
+              </ReferenceLine>
+
+              {/* Hard Pity Marker */}
+              <ReferenceLine
+                x={hardPity}
+                stroke="#4a5d4e"
+                strokeDasharray="3 3"
+                strokeOpacity={0.3}
+                strokeWidth={1}
+              >
+                <Label
+                  value="HARD PITY"
+                  position="top"
+                  fill="#4a5d4e"
+                  fillOpacity={0.8}
+                  fontSize={10}
+                  fontWeight="bold"
+                  offset={20}
+                />
+                <Label
+                  value="▼"
+                  position="top"
+                  fill="#4a5d4e"
+                  fillOpacity={0.6}
+                  fontSize={12}
+                  offset={5}
+                />
+              </ReferenceLine>
+
+              <Area
+                type="linear"
+                dataKey={dataKey}
+                stroke="#4a5d4e"
+                fill="#4a5d4e"
+                fillOpacity={0.1}
                 strokeWidth={2}
                 strokeLinejoin="round"
                 animationDuration={500}
