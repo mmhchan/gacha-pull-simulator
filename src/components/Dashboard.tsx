@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
 
 export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }: { pdfData: any[], cdfData: any[], userSavings: number, softPity: number, hardPity: number }) => {
   const [view, setView] = useState<'PDF' | 'CDF'>('PDF');
