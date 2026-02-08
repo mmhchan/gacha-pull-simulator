@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
 
 export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }: { pdfData: any[], cdfData: any[], userSavings: number, softPity: number, hardPity: number }) => {
   const [view, setView] = useState<'PDF' | 'CDF'>('PDF');
@@ -88,6 +88,16 @@ export const Dashboard = ({ pdfData, cdfData, userSavings, softPity, hardPity }:
                     fontSize: '10px', 
                     fontWeight: 'bold',
                     letterSpacing: '0.05em' 
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #dce3de', fontSize: '12px' }}
+                  labelFormatter={(label) => `Successful Pull: ${label}`}
+                  formatter={(value: any) => {
+                    if (value === undefined || value === null) return [0, ""];
+                    const formattedValue = view === 'CDF' ? `${Number(value).toFixed(1)}%` : value;
+                    const labelText = view === 'PDF' ? 'Frequency' : 'Probability';
+                    return [formattedValue, labelText];
                   }}
                 />
               </YAxis>
