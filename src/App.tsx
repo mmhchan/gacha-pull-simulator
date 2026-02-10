@@ -10,12 +10,16 @@ import Tooltip from './components/Tooltip';
 
 interface AppStats {
   avg: number;
+  median: number;
   max: number;
   min: number;
   guaranteeRate: number; // % of runs hitting the absolute floor
   currentConfidence: number; // Probability based on user's current stash
   avgCost: number; 
   maxCost: number; 
+  totalCohortInvestment: number; 
+  guaranteeRevenue: number;
+  guaranteeRevenuePercentage: number;
 }
 
 function App() {
@@ -35,6 +39,11 @@ function App() {
   // Recalculate stats whenever stash or pull costs change
   useEffect(() => {
     if (rawResults.length > 0 && stats) {
+      const totalPulls = rawResults.reduce((a, b) => a + b, 0);
+      const guaranteeCount = rawResults.filter(p => p >= params.featuredGuarantee).length;
+      const newTotalInvestment = totalPulls * costPerPull;
+      const newGuaranteeRevenue = guaranteeCount * params.featuredGuarantee * costPerPull;
+
       const successCount = rawResults.filter(p => p <= userSavings).length;
       const probability = Number(((successCount / rawResults.length) * 100).toFixed(1));
       
@@ -42,10 +51,12 @@ function App() {
         ...prev, 
         currentConfidence: probability,
         avgCost: Number((prev.avg * costPerPull).toFixed(2)),
-        maxCost: Number((prev.max * costPerPull).toFixed(2))
+        maxCost: Number((prev.max * costPerPull).toFixed(2)),
+        totalCohortInvestment: Number(newTotalInvestment.toFixed(2)),
+        guaranteeRevenue: Number(newGuaranteeRevenue.toFixed(2))
       } : null);
     }
-  }, [userSavings, costPerPull, rawResults]);
+  }, [userSavings, costPerPull, rawResults, params.featuredGuarantee]);
 
   const handleSimulate = () => {
     const simData = runMonteCarlo(params);
@@ -54,6 +65,15 @@ function App() {
     // Check hit rate for the absolute hard ceiling
     const guaranteeCount = simData.filter(r => r.wonAtGuarantee).length;
     const guaranteeRate = Number(((guaranteeCount / params.simCount) * 100).toFixed(1));
+
+    const totalPulls = pullCounts.reduce((a, b) => a + b, 0);
+    const totalCohortInvestment = totalPulls * costPerPull;
+
+    const guaranteeRevenue = guaranteeCount * params.featuredGuarantee * costPerPull;
+    const guaranteeRevenuePercentage = totalCohortInvestment > 0
+      ? Number(((guaranteeRevenue / totalCohortInvestment) * 100).toFixed(1)) 
+      : 0;
+
     const pdfData = formatDataForChart(pullCounts);
 
     // Build Success Probability (CDF) curve
@@ -67,6 +87,10 @@ function App() {
     });
 
     const avgPulls = pullCounts.reduce((a, b) => a + b, 0) / pullCounts.length;
+
+    const sortedPulls = [...pullCounts].sort((a, b) => a - b);
+    const medianPulls = sortedPulls[Math.floor(sortedPulls.length / 2)];
+    
     const maxPulls = Math.max(...pullCounts);
 
     setRawResults(pullCounts);
@@ -74,12 +98,16 @@ function App() {
     setCumulativeData(cdfData);
     setStats({
       avg: Number(avgPulls.toFixed(1)),
+      median: medianPulls,
       max: maxPulls,
       min: Math.min(...pullCounts),
       guaranteeRate,
       currentConfidence: Number(((pullCounts.filter(p => p <= userSavings).length / params.simCount) * 100).toFixed(1)),
       avgCost: Number((avgPulls * costPerPull).toFixed(2)),
-      maxCost: Number((maxPulls * costPerPull).toFixed(2))
+      maxCost: Number((maxPulls * costPerPull).toFixed(2)),
+      totalCohortInvestment: Number (totalCohortInvestment.toFixed(2)),
+      guaranteeRevenue: Number(guaranteeRevenue.toFixed(2)),
+      guaranteeRevenuePercentage
     });
   };
 
@@ -161,10 +189,16 @@ function App() {
               <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <StatCard label="Average Pulls" value={stats.avg} tooltip="Mean pulls across all iterations." />
+                  <StatCard label="Median Pulls" value={stats.median} tooltip="50% of players finish by this point." />
                   <StatCard label="Luckiest" value={stats.min} color="text-emerald-600" tooltip="Best result in this batch." />
                   <StatCard label="Worst Case" value={stats.max} color="text-orange-700" tooltip="Maximum pulls recorded." />
-                  <StatCard label="Guarantee Rate" value={`${stats.guaranteeRate}%`} color="text-amber-600" tooltip="Runs hitting the guarantee." />
-                  <StatCard label="Market Value" value={`$${stats.avgCost}`} subValue={`Max: $${stats.maxCost}`} tooltip="Calculated USD cost based on pull volume." />
+                  <StatCard label="Guarantee Rate" value={`${stats.guaranteeRate}%`} color="text-amber-600" tooltip="The percentage of the cohort who reached the featured guarantee." />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <StatCard label="Market Value" value={`$${stats.avgCost}`} subValue={`Max: $${stats.maxCost}`} tooltip="Calculated USD cost based mean average pulls and worst case." />
+                  <StatCard label="Cohort Spending" value={`$${stats.totalCohortInvestment.toLocaleString()}`} tooltip="Total gross revenue generated by all sampled players combined." />
+                  <StatCard label="Featured Guarantee Revenue" value={`$${stats.guaranteeRevenue.toLocaleString()}`} subValue={`${stats.guaranteeRevenuePercentage}% of total`} color="text-amber-700" tooltip="Revenue generated by the players who reached the featured guarantee." />
                 </div>
 
                 <div className="w-full">
