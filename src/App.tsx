@@ -35,14 +35,15 @@ function App() {
   const [rawResults, setRawResults] = useState<number[]>([]);
   const [userSavings, setUserSavings] = useState<number>(120);
   const [isRulesOpen, setIsRulesOpen] = useState(false); 
+  const [activeGuarantee, setActiveGuarantee] = useState<number>(120);
   
   // Recalculate stats whenever stash or pull costs change
   useEffect(() => {
     if (rawResults.length > 0 && stats) {
       const totalPulls = rawResults.reduce((a, b) => a + b, 0);
-      const guaranteeCount = rawResults.filter(p => p >= params.featuredGuarantee).length;
+      const guaranteeCount = rawResults.filter(p => p >= activeGuarantee).length;
       const newTotalInvestment = totalPulls * costPerPull;
-      const newGuaranteeRevenue = guaranteeCount * params.featuredGuarantee * costPerPull;
+      const newGuaranteeRevenue = guaranteeCount * activeGuarantee * costPerPull;
 
       const successCount = rawResults.filter(p => p <= userSavings).length;
       const probability = Number(((successCount / rawResults.length) * 100).toFixed(1));
@@ -56,7 +57,7 @@ function App() {
         guaranteeRevenue: Number(newGuaranteeRevenue.toFixed(2))
       } : null);
     }
-  }, [userSavings, costPerPull, rawResults, params.featuredGuarantee]);
+  }, [userSavings, costPerPull, rawResults, activeGuarantee]);
 
   const handleSimulate = () => {
     const simData = runMonteCarlo(params);
@@ -68,7 +69,7 @@ function App() {
 
     const totalPulls = pullCounts.reduce((a, b) => a + b, 0);
     const totalCohortInvestment = totalPulls * costPerPull;
-
+  
     const guaranteeRevenue = guaranteeCount * params.featuredGuarantee * costPerPull;
     const guaranteeRevenuePercentage = totalCohortInvestment > 0
       ? Number(((guaranteeRevenue / totalCohortInvestment) * 100).toFixed(1)) 
@@ -96,6 +97,7 @@ function App() {
     setRawResults(pullCounts);
     setChartData(pdfData);
     setCumulativeData(cdfData);
+    setActiveGuarantee(params.featuredGuarantee);
     setStats({
       avg: Number(avgPulls.toFixed(1)),
       median: medianPulls,
